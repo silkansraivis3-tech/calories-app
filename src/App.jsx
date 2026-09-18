@@ -24,6 +24,8 @@ function App()
   })
   const [editingMealId, setEditingMealId] = useState(null)
   const [foodImage, setFoodImage] = useState(null)
+  const [foodImagePreview, setFoodImagePreview] = useState('')
+  const [backendStatus, setBackendStatus] = useState('checking')
   const today = getToday()
   const todayMeals = meals.filter((meal) => meal.date === today)
   const totalCalories = todayMeals.reduce(
@@ -33,6 +35,28 @@ function App()
   useEffect(() => {
     localStorage.setItem('meals', JSON.stringify(meals))
   }, [meals])
+  useEffect(() => {
+    return () => {
+      if (foodImagePreview) {
+        URL.revokeObjectURL(foodImagePreview)
+      }
+    }
+  }, [foodImagePreview])
+  useEffect(() => {
+    fetch('http://localhost:3001/api/health')
+      .then((response) => {
+        if(!response.ok) {
+          throw new Error('Backend kaput request failed')
+        }
+        return response.json()
+      })
+      .then((data) => {
+        setBackendStatus(data.status)
+      })
+      .catch(() => {
+        setBackendStatus('went for bread, be soon')
+      })
+  }, [])
   function handleAddCalories()
   {
     const calories = Number(caloriesInput)
@@ -48,6 +72,7 @@ function App()
     setCaloriesInput('')
     setFoodName('')
     setFoodImage(null)
+    setFoodImagePreview('')
   }
   function handleStartEditing(meal)
   {
@@ -55,6 +80,7 @@ function App()
     setFoodName(meal.name)
     setCaloriesInput(String(meal.calories))
     setFoodImage(null)
+    setFoodImagePreview('')
   }
   function handleCancelEditing()
   {
@@ -62,12 +88,15 @@ function App()
     setFoodName('')
     setCaloriesInput('')
     setFoodImage(null)
+    setFoodImagePreview('')
   }
   function handleImageChange(event)
   {
     const file = event.target.files?.[0]
     if (!file) return
     setFoodImage(file)
+    const previewURL = URL.createObjectURL(file)
+    setFoodImagePreview(previewURL)
   }
   function handleSaveMeal()
   {
@@ -95,6 +124,9 @@ function App()
         Calories App
       </h1>
       <p>
+        Backend status: {backendStatus}
+      </p>
+      <p>
         Calories consumed today: {totalCalories} kcal
       </p>
       <label>
@@ -108,8 +140,15 @@ function App()
         </input>
         {foodImage && (
           <p>
-            Selected image: {foodImage.name}
+            Selected file: {foodImage.name}
           </p>
+        )}
+        {foodImagePreview && (
+          <img
+            src={foodImagePreview}
+            alt="Selected food"
+            width="240"
+          />
           )}
       </label>
       <label>

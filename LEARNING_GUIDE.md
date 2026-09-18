@@ -22,6 +22,8 @@ Ilgtermiņā tajā pašā aplikācijā varētu būt arī kopīgs ģimenes budže
 - **ESLint** — pārbauda kodu un atrod biežas kļūdas.
 - **Git** — saglabā projekta versijas lokāli.
 - **GitHub** — glabā Git versijas internetā.
+- **Express** — mazs Node.js backend serveris.
+- **OpenAI SDK** — bibliotēka, ko vēlāk izmantosim serverī OpenAI API izsaukumam.
 
 ## Projekta plūsma
 
@@ -60,6 +62,30 @@ npm run dev
 Palaiž lokālo aplikāciju, parasti adresē `http://localhost:5173/`.
 
 Lai apturētu serveri, terminālī nospied `Ctrl + C`.
+
+### Palaist backend serveri
+
+Atver otru termināli tajā pašā projekta mapē un palaid:
+
+```bash
+npm run server
+```
+
+Backend serveris darbojas uz `http://localhost:3001`. Pirmā pārbaudes adrese ir `http://localhost:3001/api/health`.
+
+Frontend (`5173`) un backend (`3001`) ir divi atsevišķi procesi, tāpēc parasti katram vajag savu termināļa cilni.
+
+Frontend un backend savienojumu var ātri pārbaudīt pārlūka Console:
+
+```js
+fetch('http://localhost:3001/api/health')
+  .then((response) => response.json())
+  .then((data) => console.log(data))
+```
+
+Ja redzi `{ status: 'ok' }`, browseris veiksmīgi sazinās ar Express serveri. Šis tests neko nemaina datos — tas tikai pārbauda savienojumu.
+
+React UI tagad pārbauda backend statusu ar `fetch()` un `useEffect`. Sākumā redzams `checking`, veiksmīgas atbildes gadījumā `ok`, bet nepieejama servera gadījumā tiek parādīts offline stāvoklis. Tukšs dependency masīvs `[]` nodrošina, ka health pārbaude notiek komponenta ielādes laikā, nevis katrā renderēšanā.
 
 ### Pārbaudīt kodu
 
@@ -296,6 +322,8 @@ const [foodImage, setFoodImage] = useState(null)
 
 `accept="image/*"` ierobežo izvēli līdz attēliem. `capture="environment"` mobilajā ierīcē var piedāvāt izmantot aizmugurējo kameru. `event.target.files?.[0]` paņem pirmo izvēlēto failu. Šajā posmā fails tiek glabāts tikai React state un netiek saglabāts `localStorage`, jo `File` objekts nav vienkārši saglabājams JSON formātā.
 
+Ja state vērtību saglabā, bet pats mainīgais netiek izmantots JSX vai funkcijā, ESLint rāda `no-unused-vars`. Tāpēc `foodImage.name` tiek izmantots, lai parādītu izvēlētā faila nosaukumu. `foodImage` ir pats `File` objekts, bet `foodImagePreview` ir pagaidu URL attēla parādīšanai.
+
 ### Datumi un šodienas maltītes
 
 ```jsx
@@ -328,13 +356,15 @@ QA laikā pārbaudām arī, ka total izmanto tieši filtrēto masīvu. Citādi s
 - [x] Migrēt vecās maltītes bez `date` lauka uz šodienas datumu.
 - [x] Pievienot maltītes rediģēšanu ar Save Changes un Cancel.
 - [x] Pievienot ēdiena attēla izvēli ar file input.
+- [x] Izveidot Express backend servera skeletonu ar health endpointu.
+- [x] Parādīt backend savienojuma statusu React UI.
 - [ ] Pievienot foto augšupielādi.
 - [ ] Pievienot drošu servera funkciju OpenAI API izsaukumam.
 - [ ] Pievienot login un sinhronizāciju ar datubāzi.
 
 ### Pēdējais QA
 
-Add Meal funkcionalitāte darbojas: ēdiena nosaukums un kaloriju skaits tiek ievadīti atsevišķos controlled inputs, tukšs ēdiena nosaukums tiek noraidīts, kaloriju skaits tiek pieskaitīts kopējam totalam, un pēc veiksmīgas pievienošanas abi lauki tiek iztīrīti. Maltītes tiek saglabātas `meals` masīvā un parādītas ar `.map()`. Kopējais skaits tiek aprēķināts no `meals` ar `.reduce()`. Maltīti var izdzēst ar `.filter()`, un total pēc dzēšanas automātiski pārrēķinās. Maltītes saglabājas pēc refresh ar `localStorage`, `useEffect`, `JSON.stringify()` un `JSON.parse()`. Jaunām maltītēm tiek pievienots lokālais datums, saraksts filtrējas ar `todayMeals`, un total tiek rēķināts tikai no šodienas maltītēm. Vecām maltītēm bez datuma tiek pievienots šodienas datums ar migration loģiku. Maltītes var rediģēt, saglabājot to `id` un `date`, bet mainot `name` un `calories`. Ēdiena attēlu var izvēlēties ar File input, bet tas pagaidām netiek saglabāts vai sūtīts uz API. QA atrada un salaboja kļūdu, kur izvēlētais attēls palika formā pēc add/cancel. `npm run lint` iziet bez kļūdām.
+Add Meal funkcionalitāte darbojas: ēdiena nosaukums un kaloriju skaits tiek ievadīti atsevišķos controlled inputs, tukšs ēdiena nosaukums tiek noraidīts, kaloriju skaits tiek pieskaitīts kopējam totalam, un pēc veiksmīgas pievienošanas abi lauki tiek iztīrīti. Maltītes tiek saglabātas `meals` masīvā un parādītas ar `.map()`. Kopējais skaits tiek aprēķināts no `meals` ar `.reduce()`. Maltīti var izdzēst ar `.filter()`, un total pēc dzēšanas automātiski pārrēķinās. Maltītes saglabājas pēc refresh ar `localStorage`, `useEffect`, `JSON.stringify()` un `JSON.parse()`. Jaunām maltītēm tiek pievienots lokālais datums, saraksts filtrējas ar `todayMeals`, un total tiek rēķināts tikai no šodienas maltītēm. Vecām maltītēm bez datuma tiek pievienots šodienas datums ar migration loģiku. Maltītes var rediģēt, saglabājot to `id` un `date`, bet mainot `name` un `calories`. Ēdiena attēlu var izvēlēties ar File input, faila nosaukumu un preview var redzēt uzreiz, bet attēls pagaidām netiek saglabāts vai sūtīts uz API. Izveidots Express backend skeletons ar `/api/health` endpointu; API key vēl netiek izmantots. Browsera `fetch` tests un React UI backend statusa tests ir veiksmīgi, tātad frontend un backend var sazināties un UI parāda servera stāvokli. QA atrada un salaboja `no-unused-vars` kļūdu, izmantojot `foodImage.name`, kā arī pārbaudīja, ka preview state tiek notīrīts pēc add/cancel. `npm run lint` iziet bez kļūdām.
 
 ## Drošības noteikums
 
