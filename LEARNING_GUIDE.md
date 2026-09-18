@@ -279,6 +279,23 @@ const updatedMeals = meals.map((meal) => {
 
 `.map()` izveido jaunu masīvu. Visas citas maltītes paliek nemainītas, bet maltītei ar konkrēto ID tiek atjaunināts nosaukums un kaloriju skaits. `...meal` saglabā arī tās laukus, kurus nemainām, piemēram, `id` un `date`.
 
+### Attēla izvēle ar File input
+
+```jsx
+const [foodImage, setFoodImage] = useState(null)
+```
+
+```jsx
+<input
+  type="file"
+  accept="image/*"
+  capture="environment"
+  onChange={handleImageChange}
+/>
+```
+
+`accept="image/*"` ierobežo izvēli līdz attēliem. `capture="environment"` mobilajā ierīcē var piedāvāt izmantot aizmugurējo kameru. `event.target.files?.[0]` paņem pirmo izvēlēto failu. Šajā posmā fails tiek glabāts tikai React state un netiek saglabāts `localStorage`, jo `File` objekts nav vienkārši saglabājams JSON formātā.
+
 ### Datumi un šodienas maltītes
 
 ```jsx
@@ -310,13 +327,14 @@ QA laikā pārbaudām arī, ka total izmanto tieši filtrēto masīvu. Citādi s
 - [x] Pievienot maltītēm lokālo datumu un rādīt tikai šodienas maltītes.
 - [x] Migrēt vecās maltītes bez `date` lauka uz šodienas datumu.
 - [x] Pievienot maltītes rediģēšanu ar Save Changes un Cancel.
+- [x] Pievienot ēdiena attēla izvēli ar file input.
 - [ ] Pievienot foto augšupielādi.
 - [ ] Pievienot drošu servera funkciju OpenAI API izsaukumam.
 - [ ] Pievienot login un sinhronizāciju ar datubāzi.
 
 ### Pēdējais QA
 
-Add Meal funkcionalitāte darbojas: ēdiena nosaukums un kaloriju skaits tiek ievadīti atsevišķos controlled inputs, tukšs ēdiena nosaukums tiek noraidīts, kaloriju skaits tiek pieskaitīts kopējam totalam, un pēc veiksmīgas pievienošanas abi lauki tiek iztīrīti. Maltītes tiek saglabātas `meals` masīvā un parādītas ar `.map()`. Kopējais skaits tiek aprēķināts no `meals` ar `.reduce()`. Maltīti var izdzēst ar `.filter()`, un total pēc dzēšanas automātiski pārrēķinās. Maltītes saglabājas pēc refresh ar `localStorage`, `useEffect`, `JSON.stringify()` un `JSON.parse()`. Jaunām maltītēm tiek pievienots lokālais datums, saraksts filtrējas ar `todayMeals`, un total tiek rēķināts tikai no šodienas maltītēm. Vecām maltītēm bez datuma tiek pievienots šodienas datums ar migration loģiku. Maltītes var rediģēt, saglabājot to `id` un `date`, bet mainot `name` un `calories`. QA atrada un salaboja kļūdu, kur total sākotnēji izmantoja visu `meals` masīvu. `npm run lint` iziet bez kļūdām.
+Add Meal funkcionalitāte darbojas: ēdiena nosaukums un kaloriju skaits tiek ievadīti atsevišķos controlled inputs, tukšs ēdiena nosaukums tiek noraidīts, kaloriju skaits tiek pieskaitīts kopējam totalam, un pēc veiksmīgas pievienošanas abi lauki tiek iztīrīti. Maltītes tiek saglabātas `meals` masīvā un parādītas ar `.map()`. Kopējais skaits tiek aprēķināts no `meals` ar `.reduce()`. Maltīti var izdzēst ar `.filter()`, un total pēc dzēšanas automātiski pārrēķinās. Maltītes saglabājas pēc refresh ar `localStorage`, `useEffect`, `JSON.stringify()` un `JSON.parse()`. Jaunām maltītēm tiek pievienots lokālais datums, saraksts filtrējas ar `todayMeals`, un total tiek rēķināts tikai no šodienas maltītēm. Vecām maltītēm bez datuma tiek pievienots šodienas datums ar migration loģiku. Maltītes var rediģēt, saglabājot to `id` un `date`, bet mainot `name` un `calories`. Ēdiena attēlu var izvēlēties ar File input, bet tas pagaidām netiek saglabāts vai sūtīts uz API. QA atrada un salaboja kļūdu, kur izvēlētais attēls palika formā pēc add/cancel. `npm run lint` iziet bez kļūdām.
 
 ## Drošības noteikums
 

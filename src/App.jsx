@@ -23,6 +23,7 @@ function App()
     }))
   })
   const [editingMealId, setEditingMealId] = useState(null)
+  const [foodImage, setFoodImage] = useState(null)
   const today = getToday()
   const todayMeals = meals.filter((meal) => meal.date === today)
   const totalCalories = todayMeals.reduce(
@@ -46,18 +47,27 @@ function App()
     setMeals([...meals, newMeal])
     setCaloriesInput('')
     setFoodName('')
+    setFoodImage(null)
   }
   function handleStartEditing(meal)
   {
     setEditingMealId(meal.id)
     setFoodName(meal.name)
     setCaloriesInput(String(meal.calories))
+    setFoodImage(null)
   }
   function handleCancelEditing()
   {
     setEditingMealId(null)
     setFoodName('')
     setCaloriesInput('')
+    setFoodImage(null)
+  }
+  function handleImageChange(event)
+  {
+    const file = event.target.files?.[0]
+    if (!file) return
+    setFoodImage(file)
   }
   function handleSaveMeal()
   {
@@ -87,6 +97,21 @@ function App()
       <p>
         Calories consumed today: {totalCalories} kcal
       </p>
+      <label>
+        Food photo:
+        <input
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={handleImageChange}
+        >
+        </input>
+        {foodImage && (
+          <p>
+            Selected image: {foodImage.name}
+          </p>
+          )}
+      </label>
       <label>
         Food:
         <input
