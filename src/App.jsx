@@ -1,14 +1,20 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 function App() 
 {
   const [caloriesInput, setCaloriesInput] = useState('')
   const [foodName, setFoodName] = useState('')
-  const [meals, setMeals] = useState([])
+  const [meals, setMeals] = useState(() => {
+    const savedMeals = localStorage.getItem('meals')
+    return savedMeals ? JSON.parse(savedMeals) : []
+  })
   const totalCalories = meals.reduce(
     (total, meal) => total + meal.calories,
     0
   )
+  useEffect(() => {
+    localStorage.setItem('meals', JSON.stringify(meals))
+  }, [meals])
   function handleAddCalories()
   {
     const calories = Number(caloriesInput)
