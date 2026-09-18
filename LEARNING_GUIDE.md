@@ -255,6 +255,41 @@ useEffect(() => {
 
 Šie dati ir tikai konkrētajā pārlūkā un ierīcē. Tie vēl netiek sinhronizēti ar citu lietotāju telefonu.
 
+### Maltītes rediģēšana
+
+Rediģēšanas režīmu kontrolē atsevišķs state:
+
+```jsx
+const [editingMealId, setEditingMealId] = useState(null)
+```
+
+Ja `editingMealId` ir `null`, forma darbojas kā **Add Meal**. Ja tajā ir maltītes ID, forma darbojas kā **Edit** režīms un rāda **Save Changes** un **Cancel** pogas.
+
+```jsx
+const updatedMeals = meals.map((meal) => {
+  if (meal.id !== editingMealId) return meal
+
+  return {
+    ...meal,
+    name: foodName.trim(),
+    calories
+  }
+})
+```
+
+`.map()` izveido jaunu masīvu. Visas citas maltītes paliek nemainītas, bet maltītei ar konkrēto ID tiek atjaunināts nosaukums un kaloriju skaits. `...meal` saglabā arī tās laukus, kurus nemainām, piemēram, `id` un `date`.
+
+### Datumi un šodienas maltītes
+
+```jsx
+const today = getToday()
+const todayMeals = meals.filter((meal) => meal.date === today)
+```
+
+Katrai jaunai maltītei pievienojam `date` lauku. Tad `todayMeals` satur tikai šodienas maltītes, un total tiek aprēķināts no `todayMeals`, nevis no visa vēsturiskā `meals` masīva.
+
+QA laikā pārbaudām arī, ka total izmanto tieši filtrēto masīvu. Citādi sarakstā varētu būt tikai šodienas maltītes, bet kopējais skaitlis nejauši ietvertu arī citu dienu datus.
+
 ## Pašreizējā izstrādes gaita
 
 - [x] Node.js, npm un Git uzstādīti.
@@ -272,13 +307,16 @@ useEffect(() => {
 - [x] Aprēķināt kopējo skaitu no maltīšu masīva.
 - [x] Pievienot maltītes dzēšanu ar `.filter()`.
 - [x] Saglabāt datus `localStorage`.
+- [x] Pievienot maltītēm lokālo datumu un rādīt tikai šodienas maltītes.
+- [x] Migrēt vecās maltītes bez `date` lauka uz šodienas datumu.
+- [x] Pievienot maltītes rediģēšanu ar Save Changes un Cancel.
 - [ ] Pievienot foto augšupielādi.
 - [ ] Pievienot drošu servera funkciju OpenAI API izsaukumam.
 - [ ] Pievienot login un sinhronizāciju ar datubāzi.
 
 ### Pēdējais QA
 
-Add Meal funkcionalitāte darbojas: ēdiena nosaukums un kaloriju skaits tiek ievadīti atsevišķos controlled inputs, tukšs ēdiena nosaukums tiek noraidīts, kaloriju skaits tiek pieskaitīts kopējam totalam, un pēc veiksmīgas pievienošanas abi lauki tiek iztīrīti. Maltītes tiek saglabātas `meals` masīvā un parādītas ar `.map()`. Kopējais skaits tiek aprēķināts no `meals` ar `.reduce()`. Maltīti var izdzēst ar `.filter()`, un total pēc dzēšanas automātiski pārrēķinās. Maltītes saglabājas pēc refresh ar `localStorage`, `useEffect`, `JSON.stringify()` un `JSON.parse()`. `npm run lint` iziet bez kļūdām.
+Add Meal funkcionalitāte darbojas: ēdiena nosaukums un kaloriju skaits tiek ievadīti atsevišķos controlled inputs, tukšs ēdiena nosaukums tiek noraidīts, kaloriju skaits tiek pieskaitīts kopējam totalam, un pēc veiksmīgas pievienošanas abi lauki tiek iztīrīti. Maltītes tiek saglabātas `meals` masīvā un parādītas ar `.map()`. Kopējais skaits tiek aprēķināts no `meals` ar `.reduce()`. Maltīti var izdzēst ar `.filter()`, un total pēc dzēšanas automātiski pārrēķinās. Maltītes saglabājas pēc refresh ar `localStorage`, `useEffect`, `JSON.stringify()` un `JSON.parse()`. Jaunām maltītēm tiek pievienots lokālais datums, saraksts filtrējas ar `todayMeals`, un total tiek rēķināts tikai no šodienas maltītēm. Vecām maltītēm bez datuma tiek pievienots šodienas datums ar migration loģiku. Maltītes var rediģēt, saglabājot to `id` un `date`, bet mainot `name` un `calories`. QA atrada un salaboja kļūdu, kur total sākotnēji izmantoja visu `meals` masīvu. `npm run lint` iziet bez kļūdām.
 
 ## Drošības noteikums
 

@@ -1,14 +1,31 @@
 import { useEffect, useState } from 'react'
 import './App.css'
+function getToday()
+{
+  const date = new Date()
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
 function App() 
 {
   const [caloriesInput, setCaloriesInput] = useState('')
   const [foodName, setFoodName] = useState('')
   const [meals, setMeals] = useState(() => {
     const savedMeals = localStorage.getItem('meals')
-    return savedMeals ? JSON.parse(savedMeals) : []
+    if (!savedMeals) return []
+    const storedMeals = JSON.parse(savedMeals)
+    const currentDate = getToday()
+    return storedMeals.map((meal) => ({
+      ...meal,
+      date: meal.date ?? currentDate
+    }))
   })
-  const totalCalories = meals.reduce(
+  const [editingMealId, setEditingMealId] = useState(null)
+  const today = getToday()
+  const todayMeals = meals.filter((meal) => meal.date === today)
+  const totalCalories = todayMeals.reduce(
     (total, meal) => total + meal.calories,
     0
   )
@@ -23,11 +40,39 @@ function App()
     {
       id: Date.now(),
       name: foodName.trim(),
-      calories
+      calories,
+      date: today
     }
     setMeals([...meals, newMeal])
     setCaloriesInput('')
     setFoodName('')
+  }
+  function handleStartEditing(meal)
+  {
+    setEditingMealId(meal.id)
+    setFoodName(meal.name)
+    setCaloriesInput(String(meal.calories))
+  }
+  function handleCancelEditing()
+  {
+    setEditingMealId(null)
+    setFoodName('')
+    setCaloriesInput('')
+  }
+  function handleSaveMeal()
+  {
+    const calories = Number(caloriesInput)
+    if (!foodName.trim() || calories <= 0) return
+    const updatedMeals = meals.map((meal) => {
+      if (meal.id !== editingMealId) return meal
+      return {
+        ...meal,
+        name: foodName.trim(),
+        calories
+      }
+    })
+    setMeals(updatedMeals)
+    handleCancelEditing()
   }
   function handleDeleteMeal(mealId)
   {
@@ -66,16 +111,39 @@ function App()
           }}
         />
       </label>
-      <button
-        type="button"
-        onClick={handleAddCalories}
-      >
-        Add Meal
-      </button>
+      {editingMealId === null ? (
+        <button
+          type="button"
+          onClick={handleAddCalories}
+          >
+            Add Meal
+          </button>
+      ) : (
+        <>
+          <button
+            type="button"
+            onClick={handleSaveMeal}
+          >
+            Save Changes
+          </button>
+          <button
+            type="button"
+            onClick={handleCancelEditing}
+          >
+            Cancel
+          </button>
+        </>
+      )}
       <ul>
-        {meals.map((meal) => (
+        {todayMeals.map((meal) => (
           <li key={meal.id}>
             {meal.name} - {meal.calories} kcal
+            <button
+              type="button"
+              onClick={() => handleStartEditing(meal)}
+            >
+              Edit
+            </button>
             <button
               type="button"
               onClick={() => handleDeleteMeal(meal.id)}
