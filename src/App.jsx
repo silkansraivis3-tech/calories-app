@@ -2,14 +2,31 @@ import { useState } from 'react'
 import './App.css'
 function App() 
 {
-  const [totalCalories, setTotalCalories] = useState(0)
   const [caloriesInput, setCaloriesInput] = useState('')
+  const [foodName, setFoodName] = useState('')
+  const [meals, setMeals] = useState([])
+  const totalCalories = meals.reduce(
+    (total, meal) => total + meal.calories,
+    0
+  )
   function handleAddCalories()
   {
     const calories = Number(caloriesInput)
-    if (calories <= 0) return
-    setTotalCalories(totalCalories + calories)
+    if (!foodName.trim() || calories <= 0) return
+    const newMeal = 
+    {
+      id: Date.now(),
+      name: foodName.trim(),
+      calories
+    }
+    setMeals([...meals, newMeal])
     setCaloriesInput('')
+    setFoodName('')
+  }
+  function handleDeleteMeal(mealId)
+  {
+    const updatedMeals = meals.filter((meal) => meal.id !== mealId)
+    setMeals(updatedMeals)
   }
   return (
     <main>
@@ -19,6 +36,16 @@ function App()
       <p>
         Calories consumed today: {totalCalories} kcal
       </p>
+      <label>
+        Food:
+        <input
+          type="text"
+          value={foodName}
+          onChange={(event) => setFoodName(event.target.value)}
+          placeholder="e.g. Alfredo Chicken"
+        >
+        </input>
+      </label>
       <label>
         Calories:
         <input
@@ -37,8 +64,21 @@ function App()
         type="button"
         onClick={handleAddCalories}
       >
-        Add Calories
+        Add Meal
       </button>
+      <ul>
+        {meals.map((meal) => (
+          <li key={meal.id}>
+            {meal.name} - {meal.calories} kcal
+            <button
+              type="button"
+              onClick={() => handleDeleteMeal(meal.id)}
+            >
+              Delete
+            </button>
+          </li>
+        ))}
+      </ul>
     </main>
   )
 }
