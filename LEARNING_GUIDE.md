@@ -324,6 +324,23 @@ const [foodImage, setFoodImage] = useState(null)
 
 Ja state vērtību saglabā, bet pats mainīgais netiek izmantots JSX vai funkcijā, ESLint rāda `no-unused-vars`. Tāpēc `foodImage.name` tiek izmantots, lai parādītu izvēlētā faila nosaukumu. `foodImage` ir pats `File` objekts, bet `foodImagePreview` ir pagaidu URL attēla parādīšanai.
 
+### Faila nosūtīšana uz backend ar `multer`
+
+JSON nav piemērots īsta faila sūtīšanai, tāpēc frontend izmanto `FormData`, bet Express backend izmanto `multer`:
+
+```js
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024
+  }
+})
+```
+
+`upload.single('image')` nozīmē, ka endpoint sagaida vienu failu ar lauka nosaukumu `image`. `memoryStorage()` pagaidām glabā failu tikai RAM, lai serveris varētu to apstrādāt vai nosūtīt tālāk uz OpenAI; fails netiek saglabāts diskā.
+
+Browsera `FormData` pieprasījumā `Content-Type` manuāli nenosakām, jo browseris pats pievieno vajadzīgo multipart boundary.
+
 ### Datumi un šodienas maltītes
 
 ```jsx
@@ -356,15 +373,29 @@ QA laikā pārbaudām arī, ka total izmanto tieši filtrēto masīvu. Citādi s
 - [x] Migrēt vecās maltītes bez `date` lauka uz šodienas datumu.
 - [x] Pievienot maltītes rediģēšanu ar Save Changes un Cancel.
 - [x] Pievienot ēdiena attēla izvēli ar file input.
+- [x] Nosūtīt īstu attēla failu uz backend ar `multer`.
 - [x] Izveidot Express backend servera skeletonu ar health endpointu.
 - [x] Parādīt backend savienojuma statusu React UI.
-- [ ] Pievienot foto augšupielādi.
-- [ ] Pievienot drošu servera funkciju OpenAI API izsaukumam.
+- [x] Pievienot foto augšupielādes pogu React UI.
+- [x] Pievienot `.env` ar AI API atslēgām un pārbaudīt, ka Git tās ignorē.
+- [x] Pievienot drošu servera funkciju Gemini API izsaukumam.
+- [x] Veikt pilnu attēla → Gemini → React end-to-end testu.
+- [x] Gemini atbildi pieprasīt strukturētā JSON formātā.
+- [x] Parādīt AI sastāvdaļas kā rediģējamus React laukus.
+- [x] Pārrēķināt kopējo kaloriju skaitu pēc sastāvdaļas labošanas.
+- [x] Saglabāt analizētās sastāvdaļas maltītes objektā.
+- [x] Ielādēt sastāvdaļas Edit režīmā.
+- [x] Ļaut Cancel režīmam notīrīt arī analīzes draftu.
+- [ ] Pievienot `Re-analyze` ar lietotāja izlabotajām sastāvdaļām.
 - [ ] Pievienot login un sinhronizāciju ar datubāzi.
 
 ### Pēdējais QA
 
-Add Meal funkcionalitāte darbojas: ēdiena nosaukums un kaloriju skaits tiek ievadīti atsevišķos controlled inputs, tukšs ēdiena nosaukums tiek noraidīts, kaloriju skaits tiek pieskaitīts kopējam totalam, un pēc veiksmīgas pievienošanas abi lauki tiek iztīrīti. Maltītes tiek saglabātas `meals` masīvā un parādītas ar `.map()`. Kopējais skaits tiek aprēķināts no `meals` ar `.reduce()`. Maltīti var izdzēst ar `.filter()`, un total pēc dzēšanas automātiski pārrēķinās. Maltītes saglabājas pēc refresh ar `localStorage`, `useEffect`, `JSON.stringify()` un `JSON.parse()`. Jaunām maltītēm tiek pievienots lokālais datums, saraksts filtrējas ar `todayMeals`, un total tiek rēķināts tikai no šodienas maltītēm. Vecām maltītēm bez datuma tiek pievienots šodienas datums ar migration loģiku. Maltītes var rediģēt, saglabājot to `id` un `date`, bet mainot `name` un `calories`. Ēdiena attēlu var izvēlēties ar File input, faila nosaukumu un preview var redzēt uzreiz, bet attēls pagaidām netiek saglabāts vai sūtīts uz API. Izveidots Express backend skeletons ar `/api/health` endpointu; API key vēl netiek izmantots. Browsera `fetch` tests un React UI backend statusa tests ir veiksmīgi, tātad frontend un backend var sazināties un UI parāda servera stāvokli. QA atrada un salaboja `no-unused-vars` kļūdu, izmantojot `foodImage.name`, kā arī pārbaudīja, ka preview state tiek notīrīts pēc add/cancel. `npm run lint` iziet bez kļūdām.
+Add Meal funkcionalitāte darbojas: ēdiena nosaukums un kaloriju skaits tiek ievadīti atsevišķos controlled inputs, tukšs ēdiena nosaukums tiek noraidīts, kaloriju skaits tiek pieskaitīts kopējam totalam, un pēc veiksmīgas pievienošanas abi lauki tiek iztīrīti. Maltītes tiek saglabātas `meals` masīvā un parādītas ar `.map()`. Kopējais skaits tiek aprēķināts no `meals` ar `.reduce()`. Maltīti var izdzēst ar `.filter()`, un total pēc dzēšanas automātiski pārrēķinās. Maltītes saglabājas pēc refresh ar `localStorage`, `useEffect`, `JSON.stringify()` un `JSON.parse()`. Jaunām maltītēm tiek pievienots lokālais datums, saraksts filtrējas ar `todayMeals`, un total tiek rēķināts tikai no šodienas maltītēm. Vecām maltītēm bez datuma tiek pievienots šodienas datums ar migration loģiku. Maltītes var rediģēt, saglabājot to `id` un `date`, bet mainot `name` un `calories`. Ēdiena attēlu var izvēlēties ar File input, faila nosaukumu un preview var redzēt uzreiz. Īsts attēla fails tiek nosūtīts uz Express backend ar `FormData` un `multer`. `.env` satur API atslēgas, un tās netiek publicētas GitHub. Servera `/api/analyze-food` route attēlu pārveido par Base64 datiem un nosūta Gemini vision modelim. Gemini strukturētais JSON tiek ielasīts ar `JSON.parse()`, React parāda sastāvdaļu sarakstu kā rediģējamus laukus, un `.reduce()` pārrēķina kopējās kalorijas pēc manuālām izmaiņām. `npm run lint` iziet bez kļūdām. Nākamais solis ir nosūtīt izlaboto sastāvdaļu sarakstu atpakaļ Gemini ar `Re-analyze`.
+
+QA atrada formu ievades kļūdu: kaloriju input nedrīkstēja katrā taustiņa nospiešanā uzreiz pārvērst vērtību ar `Number()`. Tukšs input kļuva par `0`, tāpēc, dzēšot `250` un rakstot `300`, parādījās `0300`. Labojums ir saglabāt rediģējamo vērtību kā tekstu un izmantot `Number(ingredient.calories || 0)` tikai summēšanas brīdī. Pārbaude ar pilnīgu dzēšanu un jaunas vērtības ievadīšanu ir veiksmīga; `npm run lint` iziet bez kļūdām.
+
+Papildu QA: noskenētas maltītes `ingredients`, `confidence` un `assumptions` tagad tiek saglabātas kopā ar maltīti. Edit režīms ielādē arī sastāvdaļas, to izmaiņas tiek saglabātas ar Save Changes, bet Cancel notīra analīzes draftu un aizver rediģēšanas režīmu. Pārbaudes ar Add, Edit, Save un Cancel ir veiksmīgas.
 
 ## Drošības noteikums
 

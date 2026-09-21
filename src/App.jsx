@@ -32,6 +32,9 @@ function App()
     (total, meal) => total + meal.calories,
     0
   )
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [analysisDraft, setAnalysisDraft] = useState(null)
+  const [analysisError, setAnalysisError] = useState('')
   useEffect(() => {
     localStorage.setItem('meals', JSON.stringify(meals))
   }, [meals])
@@ -66,11 +69,16 @@ function App()
       id: Date.now(),
       name: foodName.trim(),
       calories,
+      ingredients: analysisDraft?.ingredients ?? [],
+      confidence: analysisDraft?.confidence ?? null,
+      assumptions: analysisDraft?.assumptions ?? [],
       date: today
     }
     setMeals([...meals, newMeal])
     setCaloriesInput('')
     setFoodName('')
+    setAnalysisDraft(null)
+    setAnalysisError('')
     setFoodImage(null)
     setFoodImagePreview('')
   }
@@ -79,6 +87,13 @@ function App()
     setEditingMealId(meal.id)
     setFoodName(meal.name)
     setCaloriesInput(String(meal.calories))
+    setAnalysisDraft({
+      foodName: meal.name,
+      ingredients: meal.ingredients ?? [],
+      totalCalories: meal.calories,
+      confidence: meal.confidence ?? 'medium',
+      assumptions: meal.assumptions ?? []
+    })
     setFoodImage(null)
     setFoodImagePreview('')
   }
@@ -89,6 +104,8 @@ function App()
     setCaloriesInput('')
     setFoodImage(null)
     setFoodImagePreview('')
+    setAnalysisDraft(null)
+    setAnalysisError('')
   }
   function handleImageChange(event)
   {
@@ -97,6 +114,90 @@ function App()
     setFoodImage(file)
     const previewURL = URL.createObjectURL(file)
     setFoodImagePreview(previewURL)
+  }
+  async function handleAnalyzeFood() 
+  {
+    if (!foodImage) return
+    setIsAnalyzing(true)
+    setAnalysisDraft(null)
+    setAnalysisError('')
+    try {
+      const formData = new FormData()
+      formData.append('image', foodImage)
+      const response = await fetch ('http://localhost:3001/api/analyze-food', {
+        method: 'POST',
+        body: formData
+      })
+      const data = await response.json()
+      if(!response.ok) {
+        throw new Error(data.error || 'Could not analyze image.')
+      }
+      const parsedResult = JSON.parse(data.result)
+      setAnalysisDraft(parsedResult)
+      setFoodName(parsedResult.foodName)
+      setCaloriesInput(String(parsedResult.totalCalories))
+    } catch (error) {
+      setAnalysisError(error.message)
+    } finally {
+      setIsAnalyzing(false)
+    }
+  }
+  function handleIngredientChange(index, field, value) {
+    setAnalysisDraft ((draft) => {
+      if (!draft) return draft
+      const updatedIngredients = draft.ingredients.map(
+        (ingredient, ingredientIndex) => {
+          if (ingredientIndex !== index) return ingredient
+          return {
+            ...ingredient,
+            [field]: value
+          }
+        }
+      )
+      const totalCalories = updatedIngredients.reduce(
+        (total, ingredient) => total + Number(ingredient.calories || 0),
+        0
+      )
+      setCaloriesInput(String(totalCalories))
+      return {
+        ...draft,
+        ingredients: updatedIngredients,
+        totalCalories
+      }
+    })
+  }
+  function handleRemoveIngredient(index) {
+    setAnalysisDraft((draft) => {
+      if (!draft) return draft
+      const updatedIngredients = draft.ingredients.filter(
+        (_, ingredientIndex) => ingredientIndex !== index
+      )
+      const totalCalories = updatedIngredients.reduce(
+        (total, ingredient) => total + Number(ingredient.calories || 0),
+        0
+      )
+      return {
+        ...draft,
+        ingredients: updatedIngredients,
+        totalCalories
+      }
+    })
+  }
+  function handleAddIngredient() {
+    setAnalysisDraft((draft) => {
+      if (!draft) return draft
+      return {
+        ...draft,
+        ingredients: [
+          ...draft.ingredients,
+          {
+            name: '',
+            amount: '',
+            calories: ''
+          }
+        ]
+      }
+    })
   }
   function handleSaveMeal()
   {
@@ -107,7 +208,10 @@ function App()
       return {
         ...meal,
         name: foodName.trim(),
-        calories
+        calories,
+        ingredients: analysisDraft?.ingredients ?? meal.ingredients ?? [],
+        confidence: analysisDraft?.confidence ?? meal.confidence ?? null,
+        assumptions: analysisDraft?.assumptions ?? meal.assumptions ?? []
       }
     })
     setMeals(updatedMeals)
@@ -149,6 +253,64 @@ function App()
             alt="Selected food"
             width="240"
           />
+          )}
+          <button
+            type="button"
+            onClick={handleAnalyzeFood}
+            disabled={!foodImage || isAnalyzing}
+          >
+            {isAnalyzing ? 'Analyzing...' : 'Analyze food'}
+          </button>
+          {analysisError && <p>{analysisError}</p>}
+          {analysisDraft && (
+            <section>
+              <h2>Analysis Draft</h2>
+              <p>Confidence: {analysisDraft.confidence}</p>
+              <h3>Ingredients</h3>
+              {analysisDraft.ingredients.map((ingredient,index) => (
+                <div key={index}>
+                  <input
+                    type="text"
+                    value={ingredient.name}
+                    onChange={(event) =>
+                      handleIngredientChange(index, 'name', event.target.value)
+                    }
+                    placeholder="Ingredient"
+                    />
+                    <input
+                      type="text"
+                      value={ingredient.amount}
+                      onChange={(event) =>
+                        handleIngredientChange(index, 'amount', event.target.value)
+                      }
+                      placeholder="Amount"
+                    />
+                    <input
+                      type="number"
+                      value={ingredient.calories}
+                      onChange={(event) =>
+                        handleIngredientChange(index, 'calories', event.target.value)
+                      }
+                      placeholder="Calories"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveIngredient(index)}
+                    >
+                      Remove
+                      </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={handleAddIngredient}
+              >
+                Add Ingredient
+              </button>
+              <p>
+                Estimated total: {analysisDraft.totalCalories} kcal
+              </p>
+            </section>
           )}
       </label>
       <label>
