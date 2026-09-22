@@ -38,6 +38,31 @@ app.post(
     }
     try {
       const imageBase64 = request.file.buffer.toString('base64')
+      let editedIngredients = null
+      if (request.body.ingredients) {
+        editedIngredients = JSON.parse(request.body.ingredients)
+      }
+      const ingredientContext = editedIngredients
+      ? `
+      The user edited the ingredients manually.
+      Use this edited ingredient list as the primary source:
+      ${JSON.stringify(editedIngredients)}
+      Recalculate the calories based on this list and the image.
+      The user's edited ingredient list is authoritative.
+
+      Preserve every ingredient exactly as provided, including unusual,
+      placeholder, or humorous names.
+
+      Do not remove, rename, add, or reorder ingredients.
+
+      Do not add or remove any ingredients.
+
+      Return the same number of ingredients in the same order.
+      Only recalculate calories and update assumptions.
+      `
+        : `
+      Identify the ingredients yourself from the image.
+        `
       //const imageDataUrl = `data:${request.file.mimetype};base64,${imageBase64}`
       /*const aiResponse = await openai.responses.create({
         model: 'gpt-4.1-mini',
@@ -62,7 +87,7 @@ app.post(
         result: aiResponse.output_text
       })*/
      const geminiResponse = await gemini.models.generateContent({
-        model: 'gemini-3.5-flash',
+        model: 'gemini-3.5-flash-lite',
         contents: [
           {
             inlineData: {
@@ -73,6 +98,8 @@ app.post(
           {
             text: `
     Analyze the food in this image.
+
+    ${ingredientContext}
 
     Return only valid JSON with this exact structure:
     {

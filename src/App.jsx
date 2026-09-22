@@ -124,6 +124,9 @@ function App()
     try {
       const formData = new FormData()
       formData.append('image', foodImage)
+      if(analysisDraft) {
+        formData.append('ingredients', JSON.stringify(analysisDraft.ingredients))
+      }
       const response = await fetch ('http://localhost:3001/api/analyze-food', {
         method: 'POST',
         body: formData
@@ -259,7 +262,7 @@ function App()
             onClick={handleAnalyzeFood}
             disabled={!foodImage || isAnalyzing}
           >
-            {isAnalyzing ? 'Analyzing...' : 'Analyze food'}
+            {isAnalyzing ? 'Analyzing...' : analysisDraft ? 'Re-analyze' : 'Analyze Food'}
           </button>
           {analysisError && <p>{analysisError}</p>}
           {analysisDraft && (

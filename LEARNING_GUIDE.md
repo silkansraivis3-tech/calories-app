@@ -397,6 +397,8 @@ QA atrada formu ievades kļūdu: kaloriju input nedrīkstēja katrā taustiņa n
 
 Papildu QA: noskenētas maltītes `ingredients`, `confidence` un `assumptions` tagad tiek saglabātas kopā ar maltīti. Edit režīms ielādē arī sastāvdaļas, to izmaiņas tiek saglabātas ar Save Changes, bet Cancel notīra analīzes draftu un aizver rediģēšanas režīmu. Pārbaudes ar Add, Edit, Save un Cancel ir veiksmīgas.
 
+Static QA apstiprināja, ka `server/index.js` promptā ir noteikts: lietotāja izlabotais ingredientu saraksts ir authoritative, to nedrīkst dzēst, pārdēvēt, papildināt vai pārkārtot. `npm run lint` iziet bez kļūdām. Vēl jāveic praktisks `Re-analyze` tests ar apzināti neparastu sastāvdaļas nosaukumu.
+
 ## Drošības noteikums
 
 OpenAI API key nekad nedrīkst likt React frontend kodā vai commitot GitHub. Vēlāk API izsaukumu veidosim serverī vai edge function, un atslēgu glabāsim environment variables.
