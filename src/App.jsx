@@ -153,7 +153,11 @@ function App()
           if (ingredientIndex !== index) return ingredient
           return {
             ...ingredient,
-            [field]: value
+            [field]: value,
+            matched:
+              field === 'calories' && value !== ''
+                ? true
+                : ingredient.matched
           }
         }
       )
@@ -288,9 +292,12 @@ function App()
                       }
                       placeholder="Amount"
                     />
+                    {ingredient.matched === false && (
+                      <span>Needs review</span>
+                    )}
                     <input
                       type="number"
-                      value={ingredient.calories}
+                      value={ingredient.calories ?? ''}
                       onChange={(event) =>
                         handleIngredientChange(index, 'calories', event.target.value)
                       }

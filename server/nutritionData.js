@@ -1,0 +1,33 @@
+const nutritionData = [
+    {
+        name: 'Chicken breast',
+        keywords: ['chicken', 'chicken breast'],
+        caloriesPer100: 165,
+        unit: 'g'
+    },
+    {
+        name: 'Leeks',
+        keywords: ['leeks', 'leek'],
+        caloriesPer100: 61,
+        unit: 'g'
+    },
+    {
+        name: 'Green peas',
+        keywords: ['pea', 'peas', 'green peas'],
+        caloriesPer100: 81,
+        unit: 'g'
+    },
+    {
+        name: 'Asparagus',
+        keywords: ['asparagus'],
+        caloriesPer100: 20,
+        unit: 'g'
+    },
+    {
+        name: 'Wine',
+        keywords: ['wine', 'red wine', 'white wine'],
+        caloriesPer100: 82,
+        unit: 'ml'
+    }
+]
+export default nutritionData

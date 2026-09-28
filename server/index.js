@@ -6,6 +6,11 @@ import multer from 'multer'
 import 'dotenv/config'
 //import OpenAI from 'openai'
 import {GoogleGenAI} from '@google/genai'
+import {
+  calculateIngredientCalories,
+  calculateTotalCalories
+} from './nutritionCalculator.js'
+import {createMockAnalysis} from './mockAnalysis.js'
 const app = express()
 /*const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
@@ -86,8 +91,15 @@ app.post(
         message: 'Image analyzed.',
         result: aiResponse.output_text
       })*/
+     if(process.env.AI_PROVIDER === 'mock') {
+      const mockResult = createMockAnalysis(editedIngredients)
+      return response.json({
+        message: 'Mock analysis used',
+        result: JSON.stringify(mockResult)
+      })
+     }
      const geminiResponse = await gemini.models.generateContent({
-        model: 'gemini-3.5-flash-lite',
+        model: 'gemini-3.1-flash-lite',
         contents: [
           {
             inlineData: {
@@ -166,9 +178,18 @@ app.post(
           }
         }
      })
+     const geminiResult = JSON.parse(geminiResponse.text)
+     const calculatedIngredients = geminiResult.ingredients.map(
+      calculateIngredientCalories
+     )
+     const totalCalories = calculateTotalCalories(calculatedIngredients)
      response.json({
       message: 'Image analyzed.',
-      result: geminiResponse.text
+      result: JSON.stringify({
+        ...geminiResult,
+        ingredients: calculatedIngredients,
+        totalCalories
+      })
      })
     } catch (error) {
       console.error('Gemini request failed:', error)

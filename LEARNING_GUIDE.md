@@ -386,6 +386,7 @@ QA laikā pārbaudām arī, ka total izmanto tieši filtrēto masīvu. Citādi s
 - [x] Saglabāt analizētās sastāvdaļas maltītes objektā.
 - [x] Ielādēt sastāvdaļas Edit režīmā.
 - [x] Ļaut Cancel režīmam notīrīt arī analīzes draftu.
+- [x] Pievienot lokālu mock AI provideri izstrādei bez API pieprasījumiem.
 - [ ] Pievienot `Re-analyze` ar lietotāja izlabotajām sastāvdaļām.
 - [ ] Pievienot login un sinhronizāciju ar datubāzi.
 
@@ -398,6 +399,14 @@ QA atrada formu ievades kļūdu: kaloriju input nedrīkstēja katrā taustiņa n
 Papildu QA: noskenētas maltītes `ingredients`, `confidence` un `assumptions` tagad tiek saglabātas kopā ar maltīti. Edit režīms ielādē arī sastāvdaļas, to izmaiņas tiek saglabātas ar Save Changes, bet Cancel notīra analīzes draftu un aizver rediģēšanas režīmu. Pārbaudes ar Add, Edit, Save un Cancel ir veiksmīgas.
 
 Static QA apstiprināja, ka `server/index.js` promptā ir noteikts: lietotāja izlabotais ingredientu saraksts ir authoritative, to nedrīkst dzēst, pārdēvēt, papildināt vai pārkārtot. `npm run lint` iziet bez kļūdām. Vēl jāveic praktisks `Re-analyze` tests ar apzināti neparastu sastāvdaļas nosaukumu.
+
+Hybrid kaloriju modeļa sākums: izveidots `server/nutritionData.js` ar lokālu uzturvērtību katalogu un `server/nutritionCalculator.js` ar `findNutrition()`, `calculateIngredientCalories()` un `calculateTotalCalories()`. Backend tagad pārveido Gemini sastāvdaļu JSON, meklē atbilstības katalogā un pats aprēķina kopējo kaloriju skaitu. Šīs sesijas lint QA ir veiksmīgs; end-to-end pārbaude ar reālu attēlu un nezināmu sastāvdaļu jāizdara nākamajā sesijā.
+
+Hybrid end-to-end QA ir veiksmīgs: zināmām sastāvdaļām kalorijas tiek rēķinātas no lokālā kataloga, un false match kļūda (`Asparagus spears` tika atrasts kā `peas`, jo `includes()` meklēja vārda daļu) tika salabota ar vārdu robežu regex. Pēc labojuma 60 g asparagus tika aprēķināti kā 12 kcal. Nezināmas sastāvdaļas, piemēram, creamy sauce un cooking oil, pašlaik netiek ieskaitītas totalā, tāpēc nākamais uzlabojums ir skaidri parādīt unmatched statusu un pieprasīt manuālu kaloriju ievadi.
+
+Nezināmām sastāvdaļām UI tagad rāda `Needs review`, bet kaloriju ievades laukā `null` tiek attēlots kā tukšs string, izmantojot `ingredient.calories ?? ''`. Kad lietotājs ievada kalorijas, `matched` kļūst `true` un total tiek pārrēķināts. `npm run lint` QA ir veiksmīgs.
+
+Pievienots `server/mockAnalysis.js`, kas izmanto to pašu nutrition calculator kā Gemini rezultāts. Ar `.env` vērtību `AI_PROVIDER=mock` aplikācija var analizēt testa ēdienu bez ārēja API pieprasījuma; ar `AI_PROVIDER=gemini` tiek izmantots Gemini. Mock režīms veiksmīgi pārbaudīts, un `npm run lint` iziet bez kļūdām.
 
 ## Drošības noteikums
 
