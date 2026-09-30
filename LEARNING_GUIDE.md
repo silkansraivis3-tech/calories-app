@@ -387,7 +387,7 @@ QA laikā pārbaudām arī, ka total izmanto tieši filtrēto masīvu. Citādi s
 - [x] Ielādēt sastāvdaļas Edit režīmā.
 - [x] Ļaut Cancel režīmam notīrīt arī analīzes draftu.
 - [x] Pievienot lokālu mock AI provideri izstrādei bez API pieprasījumiem.
-- [ ] Pievienot `Re-analyze` ar lietotāja izlabotajām sastāvdaļām.
+- [x] Pievienot `Re-analyze` ar lietotāja izlabotajām sastāvdaļām.
 - [ ] Pievienot login un sinhronizāciju ar datubāzi.
 
 ### Pēdējais QA
@@ -411,6 +411,12 @@ Pievienots `server/mockAnalysis.js`, kas izmanto to pašu nutrition calculator k
 Backendā pievienots automātisks fallback: ja `AI_PROVIDER=gemini` pieprasījums saņem pagaidu `429` vai `503` kļūdu, serveris atgriež mock analīzi, nevis pārtrauc lietotāja plūsmu. Citas kļūdas netiek paslēptas. Fallback kods izgājis `npm run lint` pārbaudi; praktiski to var pārbaudīt ar Gemini high-demand situāciju vai īslaicīgi izmantojot `AI_PROVIDER=mock`.
 
 Pēc fallback pievienošanas Gemini reāla analīze veiksmīgi nostrādāja, un `npm run lint` joprojām ir tīrs. Tas apstiprina, ka fallback izmaiņas nav salauzušas galveno Gemini plūsmu. Mock režīmu var atsevišķi pārbaudīt ar `AI_PROVIDER=mock`.
+
+Jaunākais QA ar abiem provider — mock un Gemini — ir veiksmīgs: attēla analīze strādā, `Re-analyze` saglabā lietotāja pievienotās sastāvdaļas, un zināmajām sastāvdaļām kalorijas tiek pārrēķinātas. Nezināmas sastāvdaļas pareizi paliek ar `Needs review`, lai lietotājs varētu ievadīt vērtību pats. Atklāts nākamais uzlabojums: ja lietotājs manuāli nomaina, piemēram, vistas kalorijas no 330 uz 300, nākamais `Re-analyze` tās pašlaik var pārrakstīt ar AI/kataloga rezultātu. Tāpēc nākamais solis ir atzīmēt manuāli labotas kalorijas un tās pār-analyze laikā saglabāt.
+
+Pēc šī QA `npm run lint` iziet bez kļūdām.
+
+`Re-analyze` QA ir pabeigts: pēc sastāvdaļas kaloriju manuālas labošanas vērtība tiek atzīmēta ar `caloriesSource: 'manual'` un pār-analyze laikā netiek pārrakstīta. Pārējās sastāvdaļas joprojām var tikt atjaunotas no AI rezultāta, un total tiek pārrēķināts no saglabātajām vērtībām.
 
 ## Drošības noteikums
 

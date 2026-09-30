@@ -120,7 +120,7 @@ function App()
     if (!foodImage) return
     setIsAnalyzing(true)
     setAnalysisDraft(null)
-    setAnalysisError('')
+    const previousIngredients = analysisDraft?.ingredients ?? []
     try {
       const formData = new FormData()
       formData.append('image', foodImage)
@@ -136,6 +136,26 @@ function App()
         throw new Error(data.error || 'Could not analyze image.')
       }
       const parsedResult = JSON.parse(data.result)
+      const mergedIngredients = parsedResult.ingredients.map(
+        (ingredient, index) => {
+          const previousIngredient = previousIngredients[index]
+          if(previousIngredient?.caloriesSource === 'manual') {
+            return {
+              ...ingredient,
+              calories: previousIngredient.calories,
+              matched: true,
+              caloriesSource: 'manual'
+            }
+          }
+          return ingredient
+        }
+      )
+      const totalCalories = mergedIngredients.reduce(
+        (total, ingredient) => total + Number(ingredient.calories || 0),
+        0
+      )
+      parsedResult.ingredients = mergedIngredients
+      parsedResult.totalCalories = totalCalories
       setAnalysisDraft(parsedResult)
       setFoodName(parsedResult.foodName)
       setCaloriesInput(String(parsedResult.totalCalories))
@@ -157,7 +177,14 @@ function App()
             matched:
               field === 'calories' && value !== ''
                 ? true
-                : ingredient.matched
+                : ingredient.matched,
+            caloriesSource:
+              field === 'calories'
+                ? value === ''
+                  ? undefined
+                  : 'manual'
+                : ingredient.caloriesSource
+
           }
         }
       )
