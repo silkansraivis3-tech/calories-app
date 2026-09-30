@@ -41,9 +41,10 @@ app.post(
         error: 'Image file is required'
       })
     }
+    let editedIngredients = null
     try {
       const imageBase64 = request.file.buffer.toString('base64')
-      let editedIngredients = null
+      editedIngredients = null
       if (request.body.ingredients) {
         editedIngredients = JSON.parse(request.body.ingredients)
       }
@@ -193,6 +194,14 @@ app.post(
      })
     } catch (error) {
       console.error('Gemini request failed:', error)
+      const isTemporaryGeminiError = error.status === 429 || error.status == 503
+      if(isTemporaryGeminiError) {
+        const mockResult = createMockAnalysis(editedIngredients)
+        return response.json({
+          message: 'Gemini unavailable. Mock analysis used.',
+          result: JSON.stringify(mockResult)
+        })
+      }
       response.status(500).json({
         error: 'Could not analyze image.'
       })

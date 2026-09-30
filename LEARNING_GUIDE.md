@@ -408,6 +408,10 @@ Nezināmām sastāvdaļām UI tagad rāda `Needs review`, bet kaloriju ievades l
 
 Pievienots `server/mockAnalysis.js`, kas izmanto to pašu nutrition calculator kā Gemini rezultāts. Ar `.env` vērtību `AI_PROVIDER=mock` aplikācija var analizēt testa ēdienu bez ārēja API pieprasījuma; ar `AI_PROVIDER=gemini` tiek izmantots Gemini. Mock režīms veiksmīgi pārbaudīts, un `npm run lint` iziet bez kļūdām.
 
+Backendā pievienots automātisks fallback: ja `AI_PROVIDER=gemini` pieprasījums saņem pagaidu `429` vai `503` kļūdu, serveris atgriež mock analīzi, nevis pārtrauc lietotāja plūsmu. Citas kļūdas netiek paslēptas. Fallback kods izgājis `npm run lint` pārbaudi; praktiski to var pārbaudīt ar Gemini high-demand situāciju vai īslaicīgi izmantojot `AI_PROVIDER=mock`.
+
+Pēc fallback pievienošanas Gemini reāla analīze veiksmīgi nostrādāja, un `npm run lint` joprojām ir tīrs. Tas apstiprina, ka fallback izmaiņas nav salauzušas galveno Gemini plūsmu. Mock režīmu var atsevišķi pārbaudīt ar `AI_PROVIDER=mock`.
+
 ## Drošības noteikums
 
 OpenAI API key nekad nedrīkst likt React frontend kodā vai commitot GitHub. Vēlāk API izsaukumu veidosim serverī vai edge function, un atslēgu glabāsim environment variables.
