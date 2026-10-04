@@ -388,6 +388,7 @@ QA laikā pārbaudām arī, ka total izmanto tieši filtrēto masīvu. Citādi s
 - [x] Ļaut Cancel režīmam notīrīt arī analīzes draftu.
 - [x] Pievienot lokālu mock AI provideri izstrādei bez API pieprasījumiem.
 - [x] Pievienot `Re-analyze` ar lietotāja izlabotajām sastāvdaļām.
+- [x] Pievienot automātiskos nutrition calculator testus.
 - [ ] Pievienot login un sinhronizāciju ar datubāzi.
 
 ### Pēdējais QA
@@ -417,6 +418,8 @@ Jaunākais QA ar abiem provider — mock un Gemini — ir veiksmīgs: attēla an
 Pēc šī QA `npm run lint` iziet bez kļūdām.
 
 `Re-analyze` QA ir pabeigts: pēc sastāvdaļas kaloriju manuālas labošanas vērtība tiek atzīmēta ar `caloriesSource: 'manual'` un pār-analyze laikā netiek pārrakstīta. Pārējās sastāvdaļas joprojām var tikt atjaunotas no AI rezultāta, un total tiek pārrēķināts no saglabātajām vērtībām.
+
+Pievienots `server/nutritionCalculator.test.js`, izmantojot Node iebūvēto `node:test` un `node:assert/strict`. Testi pārbauda `50ml Milk → 25 kcal`, `1 tablespoon Cooking oil → 133 kcal` un nezināmas sastāvdaļas `Needs review` statusu. `npm run test:nutrition` iziet ar 3 veiksmīgiem testiem.
 
 ## Drošības noteikums
 

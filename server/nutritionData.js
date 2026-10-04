@@ -28,6 +28,30 @@ const nutritionData = [
         keywords: ['wine', 'red wine', 'white wine'],
         caloriesPer100: 82,
         unit: 'ml'
+    },
+    {
+        name: 'Milk',
+        keywords: ['milk'],
+        caloriesPer100: 50,
+        unit: 'ml'
+    },
+    {
+        name: 'Cream',
+        keywords: ['cream', 'cream sauce'],
+        caloriesPer100: 200,
+        unit: 'ml'
+    },
+    {
+        name: 'Cooking oil',
+        keywords: ['oil', 'cooking oil', 'olive oil'],
+        caloriesPer100: 884,
+        unit: 'ml'
+    },
+    {
+        name: 'Butter',
+        keywords: ['butter'],
+        caloriesPer100: 717,
+        unit: 'g'
     }
 ]
 export default nutritionData

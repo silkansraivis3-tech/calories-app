@@ -15,23 +15,46 @@ export function findNutrition(foodName) {
 
 export function calculateIngredientCalories(ingredient) {
     const nutrition = findNutrition(ingredient.name)
-    const amount = Number.parseFloat(
-        String(ingredient.amount).replace(',', '.')
-    )
-    if(!nutrition || Number.isNaN(amount)) {
+    const parsedAmount = parseAmount(ingredient.amount)
+    if(!nutrition || !parsedAmount || parsedAmount.unit !== nutrition.unit) {
         return {
             ...ingredient,
             calories: null,
             matched: false
         }
     }
-    const calories = Math.round((amount/100) * nutrition.caloriesPer100)
+    const calories = Math.round((parsedAmount.value / 100) * nutrition.caloriesPer100)
     return {
         ...ingredient,
         calories,
         matched: true,
         nutritionName: nutrition.name,
     }
+}
+function parseAmount(amountText) {
+    const text = String(amountText).toLowerCase().trim()
+    const match = text.match(/([\d.,]+)\s*(g|grams?|ml|milliliters?|tbsp|tablespoons?|tsp|teaspoons?|cups?)?/)
+    if (!match) return null
+    const value = Number.parseFloat(match[1].replace(',', '.'))
+    const unit = match[2] ?? 'g'
+    if (Number.isNaN(value)) return null
+    const conversions = {
+        g: {value, unit: 'g'},
+        gram: { value, unit: 'g' },
+        grams: { value, unit: 'g' },
+        ml: { value, unit: 'ml' },
+        milliliter: { value, unit: 'ml' },
+        milliliters: { value, unit: 'ml' },
+        tbsp: { value: value * 15, unit: 'ml' },
+        tablespoon: { value: value * 15, unit: 'ml' },
+        tablespoons: { value: value * 15, unit: 'ml' },
+        tsp: { value: value * 5, unit: 'ml' },
+        teaspoon: { value: value * 5, unit: 'ml' },
+        teaspoons: { value: value * 5, unit: 'ml' },
+        cup: { value: value * 240, unit: 'ml' },
+        cups: { value: value * 240, unit: 'ml' }
+    }
+    return conversions[unit]
 }
 export function calculateTotalCalories(ingredients) {
     return ingredients.reduce((total,ingredient) => total + Number(ingredient.calories || 0),0)
