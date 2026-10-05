@@ -51,7 +51,15 @@ const nutritionData = [
         name: 'Butter',
         keywords: ['butter'],
         caloriesPer100: 717,
-        unit: 'g'
+        unit: 'g',
+        conversions: {
+            tbsp: 14,
+            tablespoon: 14,
+            tablespooons: 14,
+            tsp: 4.7,
+            teaspoon: 4.7,
+            teaspoons: 4.7
+        }
     }
 ]
 export default nutritionData

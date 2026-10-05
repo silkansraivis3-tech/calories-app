@@ -419,7 +419,11 @@ Pēc šī QA `npm run lint` iziet bez kļūdām.
 
 `Re-analyze` QA ir pabeigts: pēc sastāvdaļas kaloriju manuālas labošanas vērtība tiek atzīmēta ar `caloriesSource: 'manual'` un pār-analyze laikā netiek pārrakstīta. Pārējās sastāvdaļas joprojām var tikt atjaunotas no AI rezultāta, un total tiek pārrēķināts no saglabātajām vērtībām.
 
-Pievienots `server/nutritionCalculator.test.js`, izmantojot Node iebūvēto `node:test` un `node:assert/strict`. Testi pārbauda `50ml Milk → 25 kcal`, `1 tablespoon Cooking oil → 133 kcal` un nezināmas sastāvdaļas `Needs review` statusu. `npm run test:nutrition` iziet ar 3 veiksmīgiem testiem.
+Pievienots `server/nutritionCalculator.test.js`, izmantojot Node iebūvēto `node:test` un `node:assert/strict`. Testi pārbauda `50ml Milk → 25 kcal`, `1 tablespoon Cooking oil → 133 kcal`, nezināmas sastāvdaļas `Needs review` statusu un neskaidru nosaukumu, piemēram, `Cooking oil / butter`. `npm run test:nutrition` iziet ar 4 veiksmīgiem testiem.
+
+Pievienotas produkta specifiskas konversijas: sviesta `1 tablespoon` tiek pārvērsta par aptuveni `14g`, bet `1 teaspoon` par `4.7g`. Sviesta konversijai pievienots atsevišķs automātiskais tests, un nutrition calculator testu komplekts tagad pārbauda 5 scenārijus.
+
+MVP stabilitātes QA ir veiksmīgs: `npm run test:nutrition` iziet ar 5/5 testiem, `npm run lint` iziet bez kļūdām un `npm run build` izveido production bundle bez kļūdām. Tas apstiprina, ka pašreizējais nutrition calculator kodols ir gatavs pilnam end-to-end pārbaudes ciklam.
 
 ## Drošības noteikums
 

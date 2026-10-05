@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect,useRef, useState } from 'react'
 import './App.css'
 function getToday()
 {
@@ -33,8 +33,10 @@ function App()
     0
   )
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [isCalculatingLocally, setIsCalculatingLocally] = useState(false)
   const [analysisDraft, setAnalysisDraft] = useState(null)
   const [analysisError, setAnalysisError] = useState('')
+  const calculationTimerRef = useRef(null)
   useEffect(() => {
     localStorage.setItem('meals', JSON.stringify(meals))
   }, [meals])
@@ -165,6 +167,60 @@ function App()
       setIsAnalyzing(false)
     }
   }
+  async function handleCalculateIngredientsLocally(
+    ingredientsToCalculate = analysisDraft?.ingredients
+  ) {
+    if (!analysisDraft) return
+    setIsCalculatingLocally(true)
+    setAnalysisError('')
+    try {
+      const response = await fetch(
+        'http://localhost:3001/api/calculate-ingredients',
+        {
+          method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ingredients: ingredientsToCalculate
+        })
+      }
+    )
+    const data = await response.json()
+    if(!response.ok) {
+      throw new Error(data.error || 'Could not calculate ingredients.')
+    }
+    const updatedIngredients = data.ingredients.map(
+      (ingredient, index) => {
+        const previousIngredient =
+          ingredientsToCalculate[index]
+
+        if (previousIngredient?.caloriesSource === 'manual') {
+          return previousIngredient
+        }
+        return ingredient
+      }
+    )
+    const totalCalories = updatedIngredients.reduce(
+      (total, ingredient) => total + Number(ingredient.calories || 0),
+      0
+    )
+    setAnalysisDraft((draft) => {
+      if(!draft) return draft
+      return {
+        ...draft,
+        ingredients: updatedIngredients,
+        totalCalories
+      }
+    })
+    setCaloriesInput(String(totalCalories))
+  } catch (error) {
+    setAnalysisError(error.message)
+  } finally {
+    setIsCalculatingLocally(false)
+  }
+  }
+  /*
   function handleIngredientChange(index, field, value) {
     setAnalysisDraft ((draft) => {
       if (!draft) return draft
@@ -200,6 +256,46 @@ function App()
       }
     })
   }
+  */
+ function handleIngredientChange(index, field, value) {
+  if(!analysisDraft) return
+  const updatedIngredients = analysisDraft.ingredients.map(
+    (ingredient, ingredientIndex) => {
+      if (ingredientIndex !== index) return ingredient
+      return {
+        ...ingredient,
+        [field]:value,
+        matched:
+          field === 'calories' && value !== ''
+            ? true
+            : ingredient.matched,
+        caloriesSource:
+          field === 'calories'
+            ? value === ''
+              ? undefined
+              : 'manual'
+            : ingredient.caloriesSource
+      }
+    }
+  )
+  const totalCalories = updatedIngredients.reduce(
+    (total, ingredient) =>
+      total + Number(ingredient.calories || 0),
+    0
+  )
+  setAnalysisDraft({
+    ...analysisDraft,
+    ingredients: updatedIngredients,
+    totalCalories
+  })
+  setCaloriesInput(String(totalCalories))
+  if(field === 'name' || field === 'amount') {
+    clearTimeout(calculationTimerRef.current)
+    calculationTimerRef.current = setTimeout(() => {
+      handleCalculateIngredientsLocally(updatedIngredients)
+    }, 500)
+  }
+ }
   function handleRemoveIngredient(index) {
     setAnalysisDraft((draft) => {
       if (!draft) return draft
@@ -217,7 +313,8 @@ function App()
       }
     })
   }
-  function handleAddIngredient() {
+  function handleAddIngredient() 
+  {
     setAnalysisDraft((draft) => {
       if (!draft) return draft
       return {
@@ -250,6 +347,40 @@ function App()
     })
     setMeals(updatedMeals)
     handleCancelEditing()
+  }
+  async function handleIngredientNameBlur(index) {
+    const ingredient = analysisDraft?.ingredients[index]
+    if (!ingredient?.name.trim()) return
+    try {
+      const response = await fetch(
+        `http://localhost:3001/api/nutrition-info?name=${encodeURIComponent(
+          ingredient.name
+        )}`
+      )
+      if (!response.ok) return
+      const data = await response.json()
+      setAnalysisDraft((draft) => {
+      if (!draft) return draft
+      const updatedIngredients = draft.ingredients.map(
+        (item, itemIndex) => {
+          if(itemIndex !== index) return item
+          const amount = String(item.amount ?? '').trim()
+          const hasUnit = /[a-zA-Z]/.test(amount)
+          return {
+            ...item,
+            unit: data.unit,
+            amount: amount && !hasUnit ? `${amount}${data.unit}` : item.amount
+          }
+        }
+      )
+      return {
+        ...draft,
+        ingredients: updatedIngredients
+      }
+    })
+  } catch {
+    // if product is not in catalog, we skip and change nothing
+    }
   }
   function handleDeleteMeal(mealId)
   {
@@ -309,6 +440,7 @@ function App()
                     onChange={(event) =>
                       handleIngredientChange(index, 'name', event.target.value)
                     }
+                    onBlur={() => handleIngredientNameBlur(index)}
                     placeholder="Ingredient"
                     />
                     <input
@@ -317,7 +449,11 @@ function App()
                       onChange={(event) =>
                         handleIngredientChange(index, 'amount', event.target.value)
                       }
-                      placeholder="Amount"
+                      placeholder={
+                        ingredient.unit 
+                          ? `Amount (${ingredient.unit})`
+                          : 'Amount'
+                      }
                     />
                     {ingredient.matched === false && (
                       <span>Needs review</span>
@@ -343,6 +479,12 @@ function App()
                 onClick={handleAddIngredient}
               >
                 Add Ingredient
+              </button>
+              <button type="button"
+              onClick = {handleCalculateIngredientsLocally}
+              disabled={isCalculatingLocally}
+              >
+                {isCalculatingLocally ? 'Calculating...' : 'Calculate locally'}
               </button>
               <p>
                 Estimated total: {analysisDraft.totalCalories} kcal

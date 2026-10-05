@@ -5,17 +5,32 @@ function normalizeText(value) {
 
 export function findNutrition(foodName) {
     const normalizedName = normalizeText(foodName)
-    return nutritionData.find((food) =>
-    food.keywords.some((keyword) => {
-        const keywordPattern = new RegExp(`\\b${keyword}\\b`)
-        return keywordPattern.test(normalizedName)
-        })
+    const matches = nutritionData.flatMap((food) => 
+        food.keywords
+            .filter((keyword) => {
+                const keywordPattern = new RegExp(`\\b${keyword}\\b`)
+                return keywordPattern.test(normalizedName)
+            })
+            .map((keyword) => ({
+                food,
+                keyword
+            }))
     )
+    if (matches.length === 0) return null
+    const uniqueFoods = [...new Set(matches.map((match) => match.food))]
+    if(uniqueFoods.length > 1) return null
+    matches.sort(
+        (first, second) => 
+            second.keyword.length - first.keyword.length
+    )
+    return matches[0].food
 }
 
 export function calculateIngredientCalories(ingredient) {
     const nutrition = findNutrition(ingredient.name)
-    const parsedAmount = parseAmount(ingredient.amount)
+    const parsedAmount = parseAmount(
+        ingredient.amount, nutrition
+    )
     if(!nutrition || !parsedAmount || parsedAmount.unit !== nutrition.unit) {
         return {
             ...ingredient,
@@ -31,13 +46,20 @@ export function calculateIngredientCalories(ingredient) {
         nutritionName: nutrition.name,
     }
 }
-function parseAmount(amountText) {
+function parseAmount(amountText, nutrition) {
     const text = String(amountText).toLowerCase().trim()
     const match = text.match(/([\d.,]+)\s*(g|grams?|ml|milliliters?|tbsp|tablespoons?|tsp|teaspoons?|cups?)?/)
     if (!match) return null
     const value = Number.parseFloat(match[1].replace(',', '.'))
-    const unit = match[2] ?? 'g'
+    const unit = match[2] ?? nutrition?.unit ??'g'
     if (Number.isNaN(value)) return null
+    const productSpecificValue = nutrition?.conversions?.[unit]
+    if(productSpecificValue) {
+        return {
+            value: value * productSpecificValue,
+            unit: nutrition.unit
+        }
+    }
     const conversions = {
         g: {value, unit: 'g'},
         gram: { value, unit: 'g' },

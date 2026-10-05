@@ -8,7 +8,8 @@ import 'dotenv/config'
 import {GoogleGenAI} from '@google/genai'
 import {
   calculateIngredientCalories,
-  calculateTotalCalories
+  calculateTotalCalories,
+  findNutrition
 } from './nutritionCalculator.js'
 import {createMockAnalysis} from './mockAnalysis.js'
 const app = express()
@@ -31,6 +32,37 @@ app.use(express.json())
 
 app.get('/api/health', (request, response) => {
   response.json({ status: 'ok' })
+})
+app.get('/api/nutrition-info', (request, response) => {
+  const ingredientName = String(
+    request.query.name || ''
+  ).trim()
+  const nutrition = findNutrition(ingredientName)
+  if(!nutrition) {
+    return response.status(404).json({
+      error: 'Ingredient not found or ambigous'
+    })
+  }
+  response.json({
+    name: nutrition.name,
+    unit: nutrition.unit
+  })
+})
+app.post('/api/calculate-ingredients', (request, response) => {
+  const { ingredients } = request.body
+  if(!Array.isArray(ingredients)) {
+    return response.status(400).json({
+      error: 'Ingredients must be an array'
+    })
+  }
+  const calculatedIngredients = ingredients.map(
+    calculateIngredientCalories
+  )
+  const totalCalories = calculateTotalCalories(calculatedIngredients)
+  response.json({
+    ingredients: calculatedIngredients,
+    totalCalories
+  })
 })
 app.post(
   '/api/analyze-food',
