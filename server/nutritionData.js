@@ -45,7 +45,20 @@ const nutritionData = [
         name: 'Cooking oil',
         keywords: ['oil', 'cooking oil', 'olive oil'],
         caloriesPer100: 884,
-        unit: 'ml'
+        unit: 'g',
+        conversions: {
+            tbsp: 13.6,
+            tablespoon: 13.6,
+            tablespoons: 13.6,
+            tsp: 4.5,
+            teaspoon: 4.5,
+            teaspoons: 4.5,
+            ml: 0.92,
+            mililiter: 0.92,
+            mililiters: 0.92,
+            milliliters: 0.92,
+            milliliter: 0.92
+        }
     },
     {
         name: 'Butter',

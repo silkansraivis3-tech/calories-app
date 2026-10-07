@@ -38,12 +38,14 @@ export function calculateIngredientCalories(ingredient) {
             matched: false
         }
     }
-    const calories = Math.round((parsedAmount.value / 100) * nutrition.caloriesPer100)
+    const normalizedAmount = Number(parsedAmount.value.toFixed(2))
+    const calories = Math.round((normalizedAmount / 100) * nutrition.caloriesPer100)
     return {
         ...ingredient,
         calories,
         matched: true,
         nutritionName: nutrition.name,
+        amount: `${normalizedAmount}${nutrition.unit}`
     }
 }
 function parseAmount(amountText, nutrition) {

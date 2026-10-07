@@ -15,7 +15,7 @@ test('converts one tablespoon of cooking oil', () => {
         name: 'Cooking oil',
         amount: '1 tablespoon'
     })
-    assert.equal(result.calories, 133)
+    assert.equal(result.calories, 120)
     assert.equal(result.matched, true)
 })
 test('marks unknown ingredient for review', () => {
@@ -86,6 +86,15 @@ test('supports decimal comma in tablespoon amount', () => {
     amount: '1,5 tablespoon'
   })
 
-  assert.equal(result.calories, 199)
+  assert.equal(result.calories, 180)
   assert.equal(result.matched, true)
+})
+test('calculates cooking oil from grams', () => {
+    const result = calculateIngredientCalories({
+        name: 'Cooking oil',
+        amount: '10 grams'
+    })
+    assert.equal(result.calories, 88)
+    assert.equal(result.amount, '10g')
+    assert.equal(result.matched, true)
 })

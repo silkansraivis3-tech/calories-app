@@ -37,6 +37,8 @@ function App()
   const [analysisDraft, setAnalysisDraft] = useState(null)
   const [analysisError, setAnalysisError] = useState('')
   const calculationTimerRef = useRef(null)
+  const [mealDescription, setMealDescription] = useState('')
+  const [showReanalyzeForm, setShowReanalyzeForm] = useState(false)
   useEffect(() => {
     localStorage.setItem('meals', JSON.stringify(meals))
   }, [meals])
@@ -117,6 +119,14 @@ function App()
     const previewURL = URL.createObjectURL(file)
     setFoodImagePreview(previewURL)
   }
+  function handleAnalyzeButtonClick()
+  {
+    if(analysisDraft) {
+      setShowReanalyzeForm(true)
+      return
+    }
+    handleAnalyzeFood()
+  }
   async function handleAnalyzeFood() 
   {
     if (!foodImage) return
@@ -126,6 +136,9 @@ function App()
     try {
       const formData = new FormData()
       formData.append('image', foodImage)
+      if (mealDescription.trim()) {
+        formData.append('mealDescription', mealDescription.trim())
+      }
       if(analysisDraft) {
         formData.append('ingredients', JSON.stringify(analysisDraft.ingredients))
       }
@@ -161,6 +174,8 @@ function App()
       setAnalysisDraft(parsedResult)
       setFoodName(parsedResult.foodName)
       setCaloriesInput(String(parsedResult.totalCalories))
+      setMealDescription('')
+      setShowReanalyzeForm(false)
     } catch (error) {
       setAnalysisError(error.message)
     } finally {
@@ -421,11 +436,45 @@ function App()
           )}
           <button
             type="button"
-            onClick={handleAnalyzeFood}
+            onClick={handleAnalyzeButtonClick}
             disabled={!foodImage || isAnalyzing}
           >
-            {isAnalyzing ? 'Analyzing...' : analysisDraft ? 'Re-analyze' : 'Analyze Food'}
+            {isAnalyzing ?'Analyzing...' : analysisDraft ? 'Re-analyze with AI' : 'Analyze Food'}
           </button>
+          {showReanalyzeForm && analysisDraft && (
+            <section>
+              <p>
+                For best result, describe what this meal is
+              </p>
+              <textarea
+                value={mealDescription}
+                onChange={(event) =>
+                  setMealDescription(event.target.value)
+                }
+                placeholder="e.g. Dumplings with cheese and sour cream"
+                rows="3"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setShowReanalyzeForm(false)
+                  handleAnalyzeFood()
+                }}
+                disabled={isAnalyzing}
+              >
+                Analyze with description
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowReanalyzeForm(false)
+                  setMealDescription('')
+                }}
+              >
+                Cancel
+              </button>
+            </section>
+          )}
           {analysisError && <p>{analysisError}</p>}
           {analysisDraft && (
             <section>

@@ -425,6 +425,8 @@ Pievienotas produkta specifiskas konversijas: sviesta `1 tablespoon` tiek pārv�
 
 MVP stabilitātes QA ir veiksmīgs: `npm run test:nutrition` iziet ar 5/5 testiem, `npm run lint` iziet bez kļūdām un `npm run build` izveido production bundle bez kļūdām. Tas apstiprina, ka pašreizējais nutrition calculator kodols ir gatavs pilnam end-to-end pārbaudes ciklam.
 
+Pievienots lietotāja apraksts `Re-analyze with AI` plūsmai: lietotājs var paskaidrot, ka ēdiens ir, piemēram, pelmeņi ar sieru, un šis konteksts tiek nosūtīts Gemini kopā ar foto. Parastās sastāvdaļu izmaiņas joprojām izmanto tikai lokālo calculator endpointu. Pievienotas arī produkta specifiskas eļļas konversijas gramos un normalizēts daudzuma attēlojums, lai nerādītu JavaScript floating-point vērtības, piemēram, `9.200000000000001g`. Praktiskais QA ar `Cooking oil`, manuāliem daudzumiem un atkārtotu analīzi ir veiksmīgs.
+
 ## Drošības noteikums
 
 OpenAI API key nekad nedrīkst likt React frontend kodā vai commitot GitHub. Vēlāk API izsaukumu veidosim serverī vai edge function, un atslēgu glabāsim environment variables.

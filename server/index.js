@@ -80,6 +80,17 @@ app.post(
       if (request.body.ingredients) {
         editedIngredients = JSON.parse(request.body.ingredients)
       }
+      const mealDescription = String(request.body.mealDescription ?? '').trim()
+      const descriptionContext = mealDescription
+        ? `
+            The user provided this correction about the meal:
+            "${mealDescription}"
+
+            Use this description as strong contextual guidance
+            when identifying the dish and its ingredients.
+            Still check the image for visible ingredients.
+          `
+        : ''
       const ingredientContext = editedIngredients
       ? `
       The user edited the ingredients manually.
@@ -145,6 +156,7 @@ app.post(
     Analyze the food in this image.
 
     ${ingredientContext}
+    ${descriptionContext}
 
     Return only valid JSON with this exact structure:
     {
@@ -164,6 +176,10 @@ app.post(
     Estimate calories conservatively.
     Explain uncertain ingredients in assumptions.
     Do not include markdown or extra text outside the JSON.
+    Never combine alternative ingredients with "/" or "and".
+    For example, do not return "Cooking oil / butter".
+    Choose the most likely ingredient name, or return separate ingredients if both are present.
+    Use exact simple names such as "Cooking oil" or "Butter".
   `
           }
         ],
